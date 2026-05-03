@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+    <title>FMX SCANNER - APG Taubaté</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --safety-blue: #0056b3;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-orange: #fd7e14;
+            --light-bg: #f0f2f5;
+            --white: #ffffff;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            background: var(--light-bg); 
+            padding-bottom: 60px; 
+            min-height: 100vh;
+        }
+        
+        header { background: var(--safety-blue); color: white; padding: 15px; text-align: center; }
+        header h1 { margin: 0; font-size: 22px; }
+        header p { margin: 0; font-size: 12px; text-transform: uppercase; }
+
+        nav { 
+            display: flex; 
+            overflow-x: auto; 
+            background: var(--white); 
+            border-bottom: 1px solid #ddd; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+        }
+        nav button { flex: 0 0 auto; background: none; border: none; padding: 12px 15px; font-weight: bold; color: #666; cursor: pointer; }
+        nav button.active { color: var(--safety-blue); border-bottom: 4px solid var(--safety-blue); }
+
+        .container { 
+            padding: 15px; 
+            max-width: 800px; 
+            margin: auto;
+            /* Permite rolagem interna suave */
+            overflow-y: visible;
+        }
+        
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .card { 
+            background: var(--white); 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            border-left: 6px solid var(--safety-blue); 
+            position: relative; 
+        }
+        
+        /* Espaço extra no fim do formulário para o teclado não cobrir o botão salvar */
+        #tela1 .card { margin-bottom: 250px; }
+
+        h3 { margin-top: 0; color: var(--safety-blue); border-bottom: 1px solid #eee; padding-bottom: 8px; }
+
+        label { display: block; margin-top: 10px; font-weight: bold; font-size: 13px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-top: 5px; box-sizing: border-box; font-size: 16px; }
+        .btn-main { background: var(--safety-blue); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+
+        .badge { padding: 5px 10px; border-radius: 6px; color: white; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .critical { background: #000; } 
+        .high { background: var(--danger-red); } 
+        .medium { background: var(--warning-orange); } 
+        .low { background: var(--success-green); }
+
+        .btn-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; }
+        .btn-delete:hover { color: var(--danger-red); }
+
+        .alert-pendente { color: var(--danger-red); border: 1px dashed var(--danger-red); padding: 8px; text-align: center; font-weight: bold; margin: 10px 0; }
+        .txt-blue { color: var(--safety-blue); font-weight: bold; }
+        .txt-green { color: var(--success-green); font-weight: bold; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 10px 0; }
+        
+        .btn-action { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; color: white; }
+        .time-header { background: #e9ecef; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; color: var(--safety-blue); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>FMX SCANNER</h1>
+    <p>APG TAUBATÉ MANUTENÇÃO</p>
+</header>
+
+<nav id="navBar">
+    <button onclick="changeScreen('tela1')" id="nav-tela1" class="active">Registro</button>
+    <button onclick="changeScreen('tela2')" id="nav-tela2">Análise</button>
+    <button onclick="changeScreen('tela3')" id="nav-tela3">Plano de Ação</button>
+    <button onclick="changeScreen('tela4')" id="nav-tela4">Indicadores</button>
+    <button onclick="changeScreen('tela5')" id="nav-tela5">Histórico</button>
+    <button onclick="changeScreen('tela6')" id="nav-tela6">Report Time</button>
+</nav>
+
+<div class="container">
+    <section id="tela1" class="screen active">
+        <div class="card">
+            <h3>Entrada de Manutenção</h3>
+            <label>Data</label><input type="date" id="f-data">
+            <label>TAG</label><input type="text" id="f-tag" placeholder="Ex: FKL 6">
+            <label>Time</label><select id="f-time"><option>Time 1</option><option>Time 2</option><option>Time 3</option></select>
+            <label>Setor</label>
+            <select id="f-setor">
+                <option>Mecânica</option><option>Hidráulica</option><option>Pneumática</option>
+                <option>Elétrica</option><option>Robótica</option><option>Processo</option>
+                <option>Engenharia</option><option>Operacional</option>
+            </select>
+            <label>Ocorrência</label><textarea id="f-falha"></textarea>
+            <label>Ação Tomada</label><textarea id="f-acao"></textarea>
+            <button class="btn-main" onclick="salvarRegistro()">SALVAR REGISTRO</button>
+        </div>
+    </section>
+
+    <section id="tela2" class="screen"><div id="analise-lista"></div></section>
+
+    <section id="tela3" class="screen">
+        <div class="card">
+            <h3>Novo Plano de Ação</h3>
+            <label>TAG</label><select id="p-tag"></select>
+            <label>Atividade</label><textarea id="p-desc"></textarea>
+            <label>Prazo</label><input type="date" id="p-prazo">
+            <label>Responsável</label><input type="text" id="p-resp">
+            <button class="btn-main" onclick="salvarPlano()">GERAR PLANO</button>
+        </div>
+        <div id="lista-planos"></div>
+    </section>
+
+    <section id="tela4" class="screen">
+        <div class="card">
+            <h3>Falhas por Setor (%)</h3>
+            <div style="position: relative; height:300px; width:100%"><canvas id="graficoSetores"></canvas></div>
+        </div>
+    </section>
+
+    <section id="tela5" class="screen"><div id="historico-concluidos"></div></section>
+
+    <section id="tela6" class="screen">
+        <div class="card"><input type="text" id="search-report" onkeyup="renderReport()" placeholder="Filtrar TAG ou Data..."></div>
+        <div id="report-lista"></div>
+    </section>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('fmx_db')) || [];
+    let planos = JSON.parse(localStorage.getItem('fmx_planos')) || {};
+    let chartFmx = null;
+
+    function salvarLocal() {
+        localStorage.setItem('fmx_db', JSON.stringify(db));
+        localStorage.setItem('fmx_planos', JSON.stringify(planos));
+    }
+
+    function changeScreen(id) {
+        document.querySelectorAll('.screen, nav button').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('nav-' + id).classList.add('active');
+        if(id === 'tela2') renderAnalise();
+        if(id === 'tela3') renderPlanos();
+        if(id === 'tela4') renderGrafico();
+        if(id === 'tela5') renderHistorico();
+        if(id === 'tela6') renderReport();
+        
+        // Volta o scroll para o topo ao trocar de tela
+        window.scrollTo(0,0);
+    }
+
+    function salvarRegistro() {
+        const tag = document.getElementById('f-tag').value.trim();
+        const falha = document.getElementById('f-falha').value.trim();
+
+        if(!tag || !falha) {
+            alert("ERRO: A TAG e a Ocorrência não podem ficar em branco!");
+            return;
+        }
+
+        const e = { 
+            id: Date.now(), 
+            data: document.getElementById('f-data').value, 
+            tag: tag.toUpperCase(), 
+            time: document.getElementById('f-time').value, 
+            setor: document.getElementById('f-setor').value, 
+            falha: falha, 
+            acao: document.getElementById('f-acao').value 
+        };
+        db.push(e);
+        salvarLocal();
+        alert("Registro salvo!");
+        document.getElementById('f-tag').value = "";
+        document.getElementById('f-falha').value = "";
+        document.getElementById('f-acao').value = "";
+    }
+
+    function excluirRegistro(id) {
+        if(confirm("Deseja excluir este registro permanentemente?")) {
+            db = db.filter(item => item.id !== id);
+            salvarLocal();
+            const activeNav = document.querySelector('nav button.active').id;
+            changeScreen(activeNav.replace('nav-', ''));
+        }
+    }
+
+    function renderAnalise() {
+        const div = document.getElementById('analise-lista');
+        div.innerHTML = '<h3>Análise de Reincidência</h3>';
+        const counts = {};
+        db.forEach(item => {
+            const key = `${item.tag} - ${item.falha}`;
+            counts[key] = (counts[key] || 0) + 1;
+        });
+        for (let key in counts) {
+            let n = counts[key];
+            let b = n >= 8 ? 'critical' : n >= 5 ? 'high' : n >= 2 ? 'medium' : 'low';
+            let label = n >= 8 ? 'CRÍTICA' : n >= 5 ? 'ALTA' : n >= 2 ? 'MÉDIA' : 'BAIXA';
+            div.innerHTML += `<div class="card"><span class="badge ${b}">${label} (${n}x)</span><p><strong>EQUIPAMENTO:</strong> ${key.split(' - ')[0]}</p><p><strong>FALHA:</strong> ${key.split(' - ')[1]}</p></div>`;
+        }
+    }
+
+    function renderPlanos() {
+        const sel = document.getElementById('p-tag');
+        sel.innerHTML = [...new Set(db.map(i => i.tag))].map(t => `<option>${t}</option>`).join('');
+        const lista = document.getElementById('lista-planos');
+        lista.innerHTML = '<h3>Status dos Planos</h3>';
+        const hoje = new Date().toISOString().split('T')[0];
+        Object.keys(planos).forEach(k => {
+            const p = planos[k]; if(p.concluido) return;
+            const atr = p.prazo < hoje;
+            lista.innerHTML += `<div class="card" style="border-left-color:${atr?'var(--danger-red)':'var(--success-green)'}"><p><strong>TAG:</strong> ${p.tag}</p><p>${p.desc}</p><p>Prazo: ${p.prazo}</p>${atr?`<div class="alert-pendente">FORA DO PRAZO</div><button onclick="repro('${k}')" class="btn-action" style="background:var(--warning-orange)">Reprogramar</button>`:''}<button onclick="conc('${k}')" class="btn-action" style="background:var(--success-green)">Concluir</button></div>`;
+        });
+    }
+
+    function conc(k) { planos[k].concluido = true; salvarLocal(); renderPlanos(); }
+    function repro(k) { const n = prompt("Nova data (AAAA-MM-DD):"); if(n) { planos[k].prazo = n; salvarLocal(); renderPlanos(); } }
+    
+    function salvarPlano() { 
+        const id = Date.now();
+        planos[id] = { tag: document.getElementById('p-tag').value, desc: document.getElementById('p-desc').value, prazo: document.getElementById('p-prazo').value, resp: document.getElementById('p-resp').value, concluido: false }; 
+        salvarLocal(); renderPlanos();
+    }
+
+    function renderGrafico() {
+        const ctx = document.getElementById('graficoSetores').getContext('2d');
+        const setores = ["Mecânica", "Hidráulica", "Pneumática", "Elétrica", "Robótica", "Processo", "Engenharia", "Operacional"];
+        const totais = setores.map(s => db.filter(i => i.setor === s).length);
+        const totalGeral = totais.reduce((a, b) => a + b, 0);
+        const percentuais = totais.map(v => totalGeral > 0 ? ((v / totalGeral) * 100).toFixed(1) : 0);
+        if(chartFmx) chartFmx.destroy();
+        chartFmx = new Chart(ctx, { type: 'bar', data: { labels: setores, datasets: [{ label: '% de Falhas', data: percentuais, backgroundColor: '#0056b3' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } } });
+    }
+
+    function renderHistorico() {
+        const div = document.getElementById('historico-concluidos');
+        div.innerHTML = '<h3>Ações Concluídas</h3>';
+        Object.values(planos).filter(p => p.concluido).reverse().forEach(p => {
+            div.innerHTML += `<div class="card" style="border-left-color:var(--success-green);background:#f9fff9;"><h4>✓ COMPROVANTE DE EXECUÇÃO</h4><p><strong>TAG:</strong> ${p.tag} | <strong>Resp:</strong> ${p.resp}</p><hr><p class="txt-blue">OCORRÊNCIA: Intervenção em ${p.tag}</p><p class="txt-green">AÇÃO REALIZADA: ${p.desc}</p></div>`;
+        });
+    }
+
+    function renderReport() {
+        const div = document.getElementById('report-lista'); 
+        const s = document.getElementById('search-report').value.toUpperCase(); 
+        div.innerHTML = '';
+        ["Time 1", "Time 2", "Time 3"].forEach(t => {
+            const l = db.filter(i => i.time === t && (i.tag.includes(s) || i.data.includes(s)));
+            if(l.length > 0) {
+                div.innerHTML += `<div class="time-header">👥 ${t}</div>`;
+                l.reverse().forEach(i => {
+                    div.innerHTML += `
+                        <div class="card">
+                            <button class="btn-delete" onclick="excluirRegistro(${i.id})">🗑</button>
+                            <p><strong>TAG:</strong> ${i.tag} | ${i.data}</p>
+                            <p class="txt-blue">${i.falha}</p>
+                            <p class="txt-green">${i.acao}</p>
+                        </div>`;
+                });
+            }
+        });
+    }
+    
+    // SCRIPT DE FOCO AUTOMÁTICO PARA O TECLADO
+    document.querySelectorAll('input, textarea, select').forEach(element => {
+        element.addEventListener('focus', function() {
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        });
+    });
+
+    document.getElementById('f-data').valueAsDate = new Date();
+</script>
+</body>
+</html>
